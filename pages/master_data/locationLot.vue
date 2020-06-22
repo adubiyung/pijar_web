@@ -1,6 +1,6 @@
 <template>
   <section class="section">
-    <h1 class="subtitle">Locations</h1>
+    <h1 class="subtitle">Data Lot Location</h1>
     <div class="spasi">
       <div class="field">
         <b-button
@@ -9,31 +9,50 @@
           aria-controls="contentCollapse"
         >Add Data</b-button>
       </div>
-      <!-- <myFilter
-        :data="filterdata"
-        @pushOutlet="updateOutlet($event)"
-        @pushCategory="updateCategory($event)"
-        @pushInventory="updateInventory($event)"
-        @pushSearch="updateSearch($event)"
-      />-->
     </div>
     <div class="columns">
       <div class="column">
         <b-table :data="locations" class="is-size-7">
           <template slot-scope="props">
-            <b-table-column field="name" label="Name" sortable>{{props.row.location_name}}</b-table-column>
-            <b-table-column field="address" label="Address" sortable>{{props.row.location_address}}</b-table-column>
-            <b-table-column field="district" label="District" sortable>{{props.row.district_name}}</b-table-column>
-            <b-table-column field="city" label="City" sortable>{{props.row.city_name}}</b-table-column>
-            <b-table-column field="prov" label="Province" sortable>{{props.row.province_name}}</b-table-column>
+            <b-table-column
+              v-if="props.row.sign_arrow_id==1"
+              field="arrow"
+              label="Sign Arrow"
+              sortable
+            >Up</b-table-column>
+            <b-table-column v-else field="arrow" label="Sign Arrow" sortable>Bottom</b-table-column>
+            <b-table-column field="name" label="Sign Name" sortable>{{props.row.sign_name}}</b-table-column>
+            <b-table-column
+              field="right"
+              label="Total Right Lot"
+              sortable
+            >{{props.row.total_right_lot}}</b-table-column>
+            <b-table-column
+              field="left"
+              label="Total Left Lot"
+              sortable
+            >{{props.row.total_left_lot}}</b-table-column>
+
             <b-table-column field="action" label="action">
-              <b-button type="is-warning" size="is-small" @click="editData(props.row.location_id)">
+              <b-button
+                type="is-warning"
+                size="is-small"
+                @click="editData(props.row.lot_location_id)"
+              >
                 <b-icon icon="mdi mdi-pencil" size="is-small"></b-icon>
               </b-button>
-              <b-button type="is-danger" size="is-small" @click="deleteData(props.row.location_id)">
+              <b-button
+                type="is-danger"
+                size="is-small"
+                @click="deleteData(props.row.lot_location_id)"
+              >
                 <b-icon icon="mdi mdi-delete" size="is-small"></b-icon>
               </b-button>
-              <b-button type="is-info" size="is-small" @click="getDetail(props.row.location_id)">
+              <b-button
+                type="is-info"
+                size="is-small"
+                @click="getDetail(props.row.lot_location_uuid)"
+              >
                 <b-icon icon="mdi mdi-more" size="is-small"></b-icon>
               </b-button>
             </b-table-column>
@@ -47,7 +66,13 @@
           aria-role="dialog"
           aria-modal
         >
-          <myModal :data="myLocationID" @pushLoca="reloadData()" />
+          <myModal
+            :loc_id="locID"
+            :detailloc_id="detailLocID"
+            :lot_id="lotID"
+            :wayid="myWayID"
+            @pushData="reloadData()"
+          />
         </b-modal>
 
         <div class="spasi"></div>
@@ -64,7 +89,7 @@ import Vue from "vue";
 // });
 import myFilter from "~/components/Filter";
 // import myPagination from "~/components/Pagination";
-import myModal from "~/components/LocationModal";
+import myModal from "~/components/LotLocationModal";
 export default {
   components: {
     myFilter,
@@ -76,8 +101,11 @@ export default {
     return {
       locations: [],
       isComponentModalActive: false,
-      myLocationID: null,
-      userID: this.$auth.user.user_officer_id
+      detailLocID: this.$route.query.id,
+      locID: this.$route.query.locid,
+      myWayID: this.$route.query.wayid,
+      userID: this.$auth.user.user_officer_id,
+      lotID: null
     };
   },
   created() {
@@ -89,14 +117,12 @@ export default {
       this.getlocations();
     },
     openModal() {
-      this.myLocationID = null;
+      this.lotID = null;
       this.isComponentModalActive = true;
     },
     async getlocations() {
       this.$axios
-        .get(
-          `/location?location_status=t&include=district_id&include=city_id&include=province_id&city_id=${this.$auth.user.location_id}`
-        )
+        .get("/lotLocation?detail_location_id=" + this.detailLocID)
         .then(response => {
           this.locations = response.data.data;
         })
@@ -105,15 +131,15 @@ export default {
         });
     },
     async editData(id) {
-      this.myLocationID = id;
+      this.lotID = id;
       this.isComponentModalActive = true;
     },
     async getDetail(id) {
-      this.$router.push("/master_data/locationDetail?id="+id)
+      this.$router.push("/master_data/locationMap?lotid=" + id);
     },
     deleteData(id) {
       this.orderData = {
-        location_id: id,
+        lot_location_id: id,
         updated_by: this.userID,
         method: "delete"
       };
@@ -125,8 +151,9 @@ export default {
         type: "is-danger",
         hasIcon: true,
         onConfirm: () => {
+          console.log("delete",this.orderData);
           this.$axios
-            .post("/location", this.orderData)
+            .post("/lotLocation", this.orderData)
             .then(response => {
               this.getlocations();
             })

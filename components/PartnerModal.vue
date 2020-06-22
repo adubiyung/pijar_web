@@ -47,7 +47,9 @@ export default {
       address: "",
       email: "",
       phone: "",
-      userID: this.$auth.user.user_id,
+      location: "",
+      userID: this.$auth.user.user_officer_id,
+      locationID: this.$auth.user.location_id,
       partners: [],
       method: "insert",
       partner_id:null
@@ -76,6 +78,7 @@ export default {
           this.phone = this.myPartner.partner_phone;
           this.updated_by = this.$auth.user.user_id;
           this.partner_id = this.myPartner.partner_id;
+          this.location = this.myPartner.city_id;
           this.method = "update";
         })
         .catch(e => {
@@ -89,6 +92,7 @@ export default {
       this.email = null;
       this.phone = null;
       this.updated_by = null;
+      this.location = null,
       this.method = "insert";
     },
     pushPartner() {
@@ -101,11 +105,13 @@ export default {
         partner_phone: this.phone,
         created_by: this.userID,
         updated_by: this.userID,
+        city_id: this.locationID,
         method: this.method
       };
       this.$axios
         .post("/partneract", this.orderData)
         .then(response => {
+          console.log('partner', this.orderData);
           this.$emit("pushPartner", this.orderData);
         })
         .catch(e => {
@@ -114,7 +120,7 @@ export default {
     },
     async getPartner() {
       await this.$axios
-        .get("/partneract")
+        .get(`/partneract?city_id=${this.$auth.user.location_id}`)
         .then(response => {
           this.partners = response.data.data;
         })

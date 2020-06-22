@@ -1,6 +1,8 @@
 <template>
   <section class="section">
-    <h1 class="subtitle">Admin Area</h1>
+    <h1 class="subtitle" v-if="roleID == 1">Data Admin Kota/Kabupaten</h1>
+    <h1 class="subtitle" v-else-if="roleID == 2">Data Admin Area</h1>
+    <h1 class="subtitle" v-else>Data Petugas Parkir (Warden)</h1>
     <div class="spasi">
       <div class="field">
         <b-button
@@ -36,10 +38,10 @@
               <div v-else>Not Uploaded Yet</div>
             </b-table-column>
             <b-table-column field="action" label="action">
-              <b-button type="is-warning" size="is-small" @click="getDetail(props.row.user_id)">
+              <b-button type="is-warning" size="is-small" @click="getDetail(props.row.user_officer_id)">
                 <b-icon icon="mdi mdi-pencil" size="is-small"></b-icon>
               </b-button>
-              <b-button type="is-danger" size="is-small" @click="deleteData(props.row.user_id)">
+              <b-button type="is-danger" size="is-small" @click="deleteData(props.row.user_officer_id)">
                 <b-icon icon="mdi mdi-delete" size="is-small"></b-icon>
               </b-button>
             </b-table-column>
@@ -57,7 +59,6 @@
         </b-modal>
 
         <div class="spasi">
-          <!-- <pre>{{ hasil_select }}</pre> -->
         </div>
       </div>
     </div>
@@ -66,12 +67,7 @@
 
 <script>
 import Vue from "vue";
-// import VeeValidate from "vee-validate";
-// Vue.use(VeeValidate, {
-//   events: ""
-// });
 import myFilter from "~/components/Filter";
-// import myPagination from "~/components/Pagination";
 import myModal from "~/components/AdminModal";
 export default {
   components: {
@@ -85,7 +81,9 @@ export default {
       users: [],
       isComponentModalActive: false,
       myUserID: null,
-      userID: this.$auth.user.user_id
+      userID: this.$auth.user.user_officer_id,
+      roleID: this.$auth.user.role_id,
+      paramID: ""
     };
   },
   created() {
@@ -101,10 +99,19 @@ export default {
       this.isComponentModalActive = true;
     },
     async getUser() {
+      if (this.roleID == 1) {
+        this.paramID = "2";
+      } else if (this.roleID == 2) {
+        this.paramID = "5";
+      } else {
+        this.paramID = "4";
+      }
+
       this.$axios
-        .get("/user?role_id=2")
+        .get(`/user?role=${this.paramID}`)
         .then(response => {
           this.users = response.data.data;
+          console.log("data user", this.users);
         })
         .catch(e => {
           console.log(e);
@@ -116,7 +123,7 @@ export default {
     },
     deleteData(id) {
       this.orderData = {
-        user_id: id,
+        user_officer_id: id,
         updated_by: this.userID,
         method: "delete"
       };
@@ -128,6 +135,7 @@ export default {
         type: "is-danger",
         hasIcon: true,
         onConfirm: () => {
+          console.log("delete", this.orderData)
           this.$axios
             .post("/user", this.orderData)
             .then(response => {

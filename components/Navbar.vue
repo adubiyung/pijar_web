@@ -7,21 +7,21 @@
     </template>
     <template slot="start" v-for="(menu,key) of menus">
       <b-navbar-item
-        v-if="menu.submenu.length == 0 && menu.role == roleID"
+        v-if="menu.submenu.length == 0"
         :key="key"
         tag="router-link"
         :to="'/'+ menu.menu_url"
         class="is-size-7"
       >{{menu.menu_name}}</b-navbar-item>
       <b-navbar-dropdown
-        v-if="menu.submenu.length > 0 && menu.role == roleID"
+        v-if="menu.submenu.length > 0"
         :label="menu.menu_name"
         :key="key"
         class="is-size-7"
       >
         <div v-for="(submenu,key) of menu.submenu" :key="key">
           <b-navbar-item
-            v-if="submenu.role == roleID"
+          v-if="submenu.role_id == roleID"
             tag="router-link"
             :to="'/'+ submenu.menu_url"
             class="is-size-7"
@@ -48,51 +48,83 @@ export default {
       roleID: this.$auth.user.role_id,
       menus: [
         {
-          menu_name: "Home",
+          menu_name: "Dashboard",
           menu_url: "dashboard",
-          role: 1,
           submenu: []
         },
         {
           menu_name: "Master Data",
-          role: 1,
           submenu: [
             {
               menu_name: "Location",
               menu_url: "master_data/locationPage",
-              role: 1
-            },
-            {
-              menu_name: "Zone",
-              menu_url: "master_data/zone",
-              role: 1
+              role_id: 2
             },
             {
               menu_name: "Promo/Voucher",
               menu_url: "master_data/promoPage",
-              role: 1
+              role_id: 2
             },
             {
               menu_name: "Partnership",
               menu_url: "master_data/partnership",
-              role: 1
+              role_id: 2
             },
             {
-              menu_name: "Admin Area",
+              menu_name: "User Data",
               menu_url: "master_data/userPage",
-              role: 1
+              role_id:1
             },
             {
-              menu_name: "Warden",
+              menu_name: "User Data",
               menu_url: "master_data/userPage",
-              role: 2
+              role_id:2
+            },
+            {
+              menu_name: "User Data",
+              menu_url: "master_data/userPage",
+              role_id:5
             }
           ]
         },
         {
           menu_name: "Reporting",
-          menu_url: "inspire",
-          role: 1,
+          submenu: [
+            {
+              menu_name: "User Report",
+              menu_url: "report/user",
+              role_id:1
+            },
+            {
+              menu_name: "Transaction Report",
+              menu_url: "report/transaction",
+              role_id:1
+            },
+            {
+              menu_name: "User Report",
+              menu_url: "report/user",
+              role_id:2
+            },
+            {
+              menu_name: "Transaction Report",
+              menu_url: "report/transaction",
+              role_id:2
+            },
+            {
+              menu_name: "User Report",
+              menu_url: "report/user",
+              role_id:5
+            },
+            {
+              menu_name: "Transaction Report",
+              menu_url: "report/transaction",
+              role_id:5
+            }
+          ]
+        },
+        {
+          menu_name: "Profile",
+          menu_url:"profile",
           submenu: []
         }
       ]

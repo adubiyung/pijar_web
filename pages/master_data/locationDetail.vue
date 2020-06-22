@@ -1,6 +1,6 @@
 <template>
   <section class="section">
-    <h1 class="subtitle">Locations</h1>
+    <h1 class="subtitle">Detail Location</h1>
     <div class="spasi">
       <div class="field">
         <b-button
@@ -21,19 +21,43 @@
       <div class="column">
         <b-table :data="locations" class="is-size-7">
           <template slot-scope="props">
-            <b-table-column field="name" label="Name" sortable>{{props.row.location_name}}</b-table-column>
-            <b-table-column field="address" label="Address" sortable>{{props.row.location_address}}</b-table-column>
-            <b-table-column field="district" label="District" sortable>{{props.row.district_name}}</b-table-column>
-            <b-table-column field="city" label="City" sortable>{{props.row.city_name}}</b-table-column>
-            <b-table-column field="prov" label="Province" sortable>{{props.row.province_name}}</b-table-column>
+            <b-table-column field="name" label="Name" sortable>{{props.row.detail_location_name}}</b-table-column>
+            <b-table-column v-if="props.row.way_type==1" field="way" label="Way Type" sortable>1 Way</b-table-column>
+            <b-table-column v-else field="way" label="Way Type" sortable>2 Way</b-table-column>
+            <b-table-column
+              v-if="props.row.vehicle_type_id==1"
+              field="vehicle"
+              label="Vehicle Type"
+              sortable
+            >Car</b-table-column>
+            <b-table-column
+              v-else-if="props.row.vehicle_type_id==2"
+              field="vehicle"
+              label="Vehicle Type"
+              sortable
+            >Motor</b-table-column>
+            <b-table-column v-else field="vehicle" label="Vehicle Type" sortable>Both</b-table-column>
+            <b-table-column field="side" label="Total Side" sortable>{{props.row.total_side}}</b-table-column>
             <b-table-column field="action" label="action">
-              <b-button type="is-warning" size="is-small" @click="editData(props.row.location_id)">
+              <b-button
+                type="is-warning"
+                size="is-small"
+                @click="editData(props.row.detail_location_id)"
+              >
                 <b-icon icon="mdi mdi-pencil" size="is-small"></b-icon>
               </b-button>
-              <b-button type="is-danger" size="is-small" @click="deleteData(props.row.location_id)">
+              <b-button
+                type="is-danger"
+                size="is-small"
+                @click="deleteData(props.row.detail_location_id)"
+              >
                 <b-icon icon="mdi mdi-delete" size="is-small"></b-icon>
               </b-button>
-              <b-button type="is-info" size="is-small" @click="getDetail(props.row.location_id)">
+              <b-button
+                type="is-info"
+                size="is-small"
+                @click="getDetail(props.row.detail_location_id, props.row.way_type)"
+              >
                 <b-icon icon="mdi mdi-more" size="is-small"></b-icon>
               </b-button>
             </b-table-column>
@@ -47,7 +71,7 @@
           aria-role="dialog"
           aria-modal
         >
-          <myModal :data="myLocationID" @pushLoca="reloadData()" />
+          <myModal :loc_id="myLocationID" :detailloc_id="myDetailID" @pushLoca="reloadData()" />
         </b-modal>
 
         <div class="spasi"></div>
@@ -58,17 +82,11 @@
 
 <script>
 import Vue from "vue";
-// import VeeValidate from "vee-validate";
-// Vue.use(VeeValidate, {
-//   events: ""
-// });
 import myFilter from "~/components/Filter";
-// import myPagination from "~/components/Pagination";
-import myModal from "~/components/LocationModal";
+import myModal from "~/components/DetailLocationModal";
 export default {
   components: {
     myFilter,
-    // myPagination,
     myModal
   },
   middleware: "auth",
@@ -76,11 +94,14 @@ export default {
     return {
       locations: [],
       isComponentModalActive: false,
-      myLocationID: null,
+      myLocationID: this.$route.query.id,
+      myDetailID: "",
       userID: this.$auth.user.user_officer_id
     };
   },
   created() {
+    console.log("myloc", this.myLocationID);
+
     this.getlocations();
   },
   methods: {
@@ -89,14 +110,11 @@ export default {
       this.getlocations();
     },
     openModal() {
-      this.myLocationID = null;
       this.isComponentModalActive = true;
     },
     async getlocations() {
       this.$axios
-        .get(
-          `/location?location_status=t&include=district_id&include=city_id&include=province_id&city_id=${this.$auth.user.location_id}`
-        )
+        .get("/detailLocation?location_id=" + this.myLocationID)
         .then(response => {
           this.locations = response.data.data;
         })
@@ -105,15 +123,22 @@ export default {
         });
     },
     async editData(id) {
-      this.myLocationID = id;
+      this.myDetailID = id;
       this.isComponentModalActive = true;
     },
-    async getDetail(id) {
-      this.$router.push("/master_data/locationDetail?id="+id)
+    async getDetail(id, wayid) {
+      this.$router.push(
+        "/master_data/locationLot?id=" +
+          id +
+          "&locid=" +
+          this.myLocationID +
+          "&wayid=" +
+          wayid
+      );
     },
     deleteData(id) {
       this.orderData = {
-        location_id: id,
+        detail_location_id: id,
         updated_by: this.userID,
         method: "delete"
       };
@@ -126,7 +151,7 @@ export default {
         hasIcon: true,
         onConfirm: () => {
           this.$axios
-            .post("/location", this.orderData)
+            .post("/detailLocation", this.orderData)
             .then(response => {
               this.getlocations();
             })

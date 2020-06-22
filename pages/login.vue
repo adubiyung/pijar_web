@@ -63,12 +63,12 @@ export default {
       password: "",
       errs: null,
       sts: null,
-      appsname: "PIJAR WEB",
+      appsname: "E-Parking",
       logo: "",
       company: "",
       color1: "black",
       color2: "#4f38a4",
-      appsdesc: "PIJAR Web Admin",
+      appsdesc: "E-Parking Web Admin",
       error: null
     };
   },
@@ -83,16 +83,11 @@ export default {
           }
         })
         .then(response => {
-          console.log("babi", this.$auth.user.role_id);
-          if (this.$auth.user.role_id <= 2) {
-            console.log("babi-babi", this.$auth.user.role_id);
+          if (this.$auth.user.role_id == 1 || this.$auth.user.role_id == 2 || this.$auth.user.role_id == 5) {
             this.$router.push("/dashboard");
           } else {
-            console.log("monyet");
             this.$auth.logout();
-            // this.$router.push("/login");
             this.errs = "Wrong Username & Password";
-
           }
         })
         .catch(e => {

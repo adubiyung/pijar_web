@@ -2,7 +2,10 @@
   <section>
     <form @submit.prevent="pushLoca">
       <div class="modal-card">
-        <header class="modal-card-head">
+        <header class="modal-card-head" v-if="this.data">
+          <p class="modal-card-title">Edit Location</p>
+        </header>
+        <header class="modal-card-head" v-else>
           <p class="modal-card-title">Add Location</p>
         </header>
         <section class="modal-card-body">
@@ -12,47 +15,25 @@
           <b-field label="Address" label-position="on-border">
             <b-input v-model="address" placeholder="eg: Jl. Sabang" maxlength="200" type="textarea"></b-input>
           </b-field>
-          <!-- <div class="columns">
+          <div class="columns">
             <div class="column">
-              <b-field label="Sub-District" label-position="on-border">
-                <b-select placeholder="Select a sub-district" expanded>
-                  <option value="1">Option 1</option>
-                  <option value="2">Option 2</option>
-                </b-select>
+              <b-field label="Province" label-position="on-border">
+                <b-input :value="province_name" disabled></b-input>
+              </b-field>
+            </div>
+            <div class="column">
+              <b-field label="City" label-position="on-border">
+                <b-input :value="city_name" disabled></b-input>
               </b-field>
             </div>
             <div class="column">
               <b-field label="District" label-position="on-border">
                 <b-select v-model="district" placeholder="Select a district" expanded>
                   <option
-                    v-for="option in locations"
-                    :value="option.location_id"
-                    :key="option.location_id"
-                  >{{ option.location_name }}</option>
-                </b-select>
-              </b-field>
-            </div>
-          </div>-->
-          <div class="columns">
-            <div class="column">
-              <b-field label="Province" label-position="on-border">
-                <b-select v-model="prov" @change.native="getCities(prov)" placeholder="Select a province" expanded>
-                  <option
-                    v-for="(prov, index) in provinces"
-                    :value="prov.province_id"
-                    :key="index"
-                  >{{prov.province_name}}</option>
-                </b-select>
-              </b-field>
-            </div>
-            <div class="column">
-              <b-field label="City" label-position="on-border">
-                <b-select v-model="city" placeholder="Select a city" expanded>
-                  <option
-                    v-for="option in cities"
-                    :value="option.city_id"
-                    :key="option.city_id"
-                  >{{option.city_name}}</option>
+                    v-for="option in districts"
+                    :value="option.district_id"
+                    :key="option.district_id"
+                  >{{option.district_name}}</option>
                 </b-select>
               </b-field>
             </div>
@@ -69,12 +50,6 @@
               </b-field>
             </div>
           </div>
-          <b-field label="Email" label-position="on-border">
-            <b-input v-model="email" placeholder="eg: location@mail.co.id"></b-input>
-          </b-field>
-          <b-field label="Phone Number" label-position="on-border">
-            <b-input v-model="phone" placeholder="eg: (+62) xxx"></b-input>
-          </b-field>
         </section>
         <footer class="modal-card-foot">
           <button class="button is-small" type="button" @click="$parent.close()">Cancel</button>
@@ -86,11 +61,6 @@
 </template>
 
 <script>
-// import Vue from "vue";
-// import VeeValidate from "vee-validate";
-// Vue.use(VeeValidate, {
-//   events: ""
-// });
 export default {
   props: ["data"],
   data() {
@@ -99,23 +69,22 @@ export default {
       address: "",
       latitude: "",
       longitude: "",
-      email: "",
-      phone: "",
-      prov: "",
-      city: "",
-      cities: [],
-      provinces: [],
-      userID: this.$auth.user.user_id,
-      locations: [],
       district: null,
+      districts: [],
+      userID: this.$auth.user.user_officer_id,
+      locations: [],
       method: "insert",
-      location_id: null
+      location_id: null,
+      province_id: "",
+      province_name: "",
+      city_id: "",
+      city_name: ""
     };
   },
   created() {
     this.getlocations();
-    
-    this.getProvinces();
+
+    this.getDistrict();
     if (this.data) {
       this.getDetail(this.data);
     } else {
@@ -123,22 +92,12 @@ export default {
     }
   },
   methods: {
-    getCities(prov) {
-      this.cities=[]
+    async getDistrict() {
+      this.districts = [];
       this.$axios
-        .get("/city?province_id=" + prov)
+        .get(`/district?city_id=${this.$auth.user.location_id}`)
         .then(response => {
-          this.cities = response.data.data;
-        })
-        .catch(e => {
-          console.log(e);
-        });
-    },
-    getProvinces() {
-      this.$axios
-        .get("/province")
-        .then(response => {
-          this.provinces = response.data.data;
+          this.districts = response.data.data;
         })
         .catch(e => {
           console.log(e);
@@ -155,16 +114,21 @@ export default {
           this.address = this.myLocation.location_address;
           this.latitude = this.myLocation.location_latitude;
           this.longitude = this.myLocation.location_longitude;
-          this.email = this.myLocation.location_email;
-          this.phone = this.myLocation.location_phone;
           this.updated_by = this.$auth.user.user_id;
-          this.district = this.myLocation.location_district;
-          this.subdistrict = this.myLocation.location_subdistrict;
-          this.city = this.myLocation.location_city;
-          this.province = this.myLocation.location_province;
-          this.area = this.myLocation.location_area;
+          this.district = this.myLocation.district_id;
+          this.city_id = this.myLocation.city_id;
+          this.city_name = this.myLocation.city_id;
+          this.province_id = this.myLocation.province_id;
+          this.province_name = this.myLocation.province_name;
+          this.area = this.myLocation.area_id;
           this.location_id = this.myLocation.location_id;
           this.method = "update";
+          if (this.prov) {
+            this.getCities(this.prov);
+          }
+          if (this.city) {
+            this.getDistrict(this.city);
+          }
         })
         .catch(e => {
           console.log(e);
@@ -175,11 +139,8 @@ export default {
       this.address = null;
       this.latitude = null;
       this.longitude = null;
-      this.email = null;
-      this.phone = null;
       this.updated_by = null;
       this.district = null;
-      this.subdistrict = null;
       this.city = null;
       this.province = null;
       this.method = "insert";
@@ -189,15 +150,12 @@ export default {
         location_id: this.location_id,
         location_name: this.name,
         location_address: this.address,
-        location_district: "-",
-        location_subdistrict: "-",
-        location_city: this.city,
-        location_province: this.prov,
-        location_area: 2,
+        district_id: this.district,
+        city_id: this.city_id,
+        province_id: this.province_id,
+        area_id: 2,
         location_latitude: this.latitude,
         location_longitude: this.longitude,
-        location_email: this.email,
-        location_phone: this.phone,
         created_by: this.userID,
         updated_by: this.userID,
         method: this.method
@@ -205,7 +163,6 @@ export default {
       this.$axios
         .post("/location", this.orderData)
         .then(response => {
-          console.log("loca", this.orderData);
           this.$emit("pushLoca", this.orderData);
         })
         .catch(e => {
@@ -214,10 +171,13 @@ export default {
     },
     async getlocations() {
       await this.$axios
-        .get("/location")
+        .get(`/provinceByCity?city_id=${this.$auth.user.location_id}`)
         .then(response => {
           this.locations = response.data.data;
-          console.log(this.locations);
+          this.province_id = this.locations[0].province_id;
+          this.province_name = this.locations[0].province_name;
+          this.city_id = this.locations[0].city_id;
+          this.city_name = this.locations[0].city_name;
         })
         .catch(e => {
           console.log(e);

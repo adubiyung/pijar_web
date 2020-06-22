@@ -2,52 +2,10 @@
   <section>
     <form @submit.prevent="pushData">
       <div class="modal-card">
-        <header class="modal-card-head" v-if="this.data">
-          <p class="modal-card-title">Edit Location</p>
-        </header>
-        <header class="modal-card-head" v-else>
-          <p class="modal-card-title">Add Location</p>
+        <header class="modal-card-head">
+          <p class="modal-card-title">Admin Area</p>
         </header>
         <section class="modal-card-body">
-          <b-field label="Location" label-position="on-border" v-if="this.roleID == 1">
-                <b-select
-                  v-model="loc"
-                  placeholder="Select a location"
-                  expanded
-                >
-                  <option
-                    v-for="(loc, index) in cities"
-                    :value="loc.city_id"
-                    :key="index"
-                  >{{loc.city_name}}</option>
-                </b-select>
-          </b-field>
-          <b-field label="Location" label-position="on-border" v-else-if="this.roleID == 2">
-                <b-select
-                  v-model="loc"
-                  placeholder="Select a location"
-                  expanded
-                >
-                  <option
-                    v-for="(dist, index) in districts"
-                    :value="dist.district_id"
-                    :key="index"
-                  >{{dist.district_name}}</option>
-                </b-select>
-          </b-field>
-          <b-field label="Location" label-position="on-border" v-else>
-                <b-select
-                  v-model="loc"
-                  placeholder="Select a location"
-                  expanded
-                >
-                  <option
-                    v-for="(a, index) in locations"
-                    :value="a.location_id"
-                    :key="index"
-                  >{{a.location_name}}</option>
-                </b-select>
-          </b-field>
           <b-field label="Name" label-position="on-border">
             <b-input v-model="name" placeholder="eg: John Doe"></b-input>
           </b-field>
@@ -89,15 +47,16 @@
             </b-upload>
           </b-field>
           <div class="tags">
-            <span v-for="(file, index) in dropFiles" :key="index" class="tag is-primary">
-              {{file.name}}
-              <button
-                class="delete is-small"
-                type="button"
-                @click="deleteDropFile(index)"
-              ></button>
+            <span v-for="(file, index) in dropFiles"
+                :key="index"
+                class="tag is-primary" >
+                {{file.name}}
+                <button class="delete is-small"
+                    type="button"
+                    @click="deleteDropFile(index)">
+                </button>
             </span>
-          </div>
+        </div>
         </section>
         <footer class="modal-card-foot">
           <button class="button is-small" type="button" @click="$parent.close()">Cancel</button>
@@ -113,10 +72,6 @@ export default {
   props: ["data"],
   data() {
     return {
-      loc: null,
-      districts: [],
-      cities: [],
-      locations: [],
       name: "",
       nik: "",
       address1: "",
@@ -124,9 +79,7 @@ export default {
       email: "",
       phone: "",
       ktp: "",
-      userID: this.$auth.user.user_officer_id,
-      roleID: this.$auth.user.role_id,
-      role_id: "",
+      userID: this.$auth.user.user_id,
       users: [],
       method: "insert",
       dropFiles: [],
@@ -139,14 +92,6 @@ export default {
       this.getDetail(this.data);
     } else {
       this.getReset();
-    }
-
-    if (this.roleID == 1) {
-      this.getCities();
-    } else if (this.roleID == 2) {
-      this.getDistrict();
-    } else {
-      this.getLocations();
     }
   },
   methods: {
@@ -173,7 +118,7 @@ export default {
     async getDetail(id) {
       this.myUserID = id;
       await this.$axios
-        .get("/user?user=" + id)
+        .get("/user?user_id=" + id)
         .then(response => {
           this.isComponentModalActive = true;
           this.myUser = response.data.data[0];
@@ -184,9 +129,8 @@ export default {
           this.email = this.myUser.user_email;
           this.phone = this.myUser.user_phone;
           this.ktp = this.myUser.user_ktp;
-          this.updated_by = this.$auth.user.user_officer_id;
-          this.user_id = this.myUser.user_officer_id;
-          this.loc = this.myUser.location_id;
+          this.updated_by = this.$auth.user.user_id;
+          this.user_id = this.myUser.user_id;
           this.method = "update";
         })
         .catch(e => {
@@ -194,7 +138,6 @@ export default {
         });
     },
     getReset() {
-      this.loc = null;
       this.nik = null;
       this.name = null;
       this.address1 = null;
@@ -207,18 +150,9 @@ export default {
       this.method = "insert";
     },
     pushData() {
-      if (this.roleID == 1) {
-        this.role_id = "2";
-      } else if (this.roleID == 2) {
-        this.role_id = "5";
-      } else{
-        this.role_id = "4";
-      }
       this.orderData = {
-        location_id: this.loc,
         user_nik: this.nik,
-        user_officer_id: this.user_id,
-        role_id: this.role_id,
+        user_id: this.user_id,
         user_fullname: this.name,
         user_address1: this.address1,
         user_address2: this.address2,
@@ -243,38 +177,7 @@ export default {
         .get("/user")
         .then(response => {
           this.users = response.data.data;
-        })
-        .catch(e => {
-          console.log(e);
-        });
-    },
-    async getCities() {
-      this.cities = [];
-      this.$axios
-        .get("/city?province_id=" + this.$auth.user.location_id)
-        .then(response => {
-          this.cities = response.data.data;
-        })
-        .catch(e => {
-          console.log(e);
-        });
-    },
-    async getDistrict() {
-      this.districts = [];
-      this.$axios
-        .get("/district?city_id=" + this.$auth.user.location_id)
-        .then(response => {
-          this.districts = response.data.data;
-        })
-        .catch(e => {
-          console.log(e);
-        });
-    },
-    async getLocations() {
-      this.$axios
-        .get("/location?district_id="+this.$auth.user.location_id)
-        .then(response => {
-          this.locations = response.data.data;
+          console.log(this.locations);
         })
         .catch(e => {
           console.log(e);

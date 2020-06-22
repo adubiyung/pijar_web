@@ -71,8 +71,7 @@ import Vue from "vue";
 //   events: ""
 // });
 import myFilter from "~/components/Filter";
-// import myPagination from "~/components/Pagination";
-import myModal from "~/components/AdminModal";
+import myModal from "~/components/WardenModal";
 export default {
   components: {
     myFilter,

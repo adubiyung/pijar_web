@@ -9,13 +9,6 @@
           aria-controls="contentCollapse"
         >Add Data</b-button>
       </div>
-      <!-- <myFilter
-        :data="filterdata"
-        @pushOutlet="updateOutlet($event)"
-        @pushCategory="updateCategory($event)"
-        @pushInventory="updateInventory($event)"
-        @pushSearch="updateSearch($event)"
-      />-->
     </div>
     <div class="columns">
       <div class="column">
@@ -114,7 +107,7 @@ export default {
     },
     async getPartner() {
       this.$axios
-        .get("/partneract")
+        .get(`/partneract?city_id=${this.$auth.user.location_id}`)
         .then(response => {
           this.partners = response.data.data;
         })
