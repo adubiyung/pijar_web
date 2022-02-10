@@ -27,7 +27,7 @@
     "vue-json-excel": "^0.2.98"
   },
   "devDependencies": {
-    "node-sass": "^4.13.0",
+    "node-sass": "^7.0.0",
     "nodemon": "^1.18.9",
     "sass-loader": "^8.0.0",
     "webpack": "^4.41.2"
