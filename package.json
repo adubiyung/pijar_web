@@ -17,7 +17,7 @@
     "cross-env": "^5.2.0",
     "jspdf": "^1.5.3",
     "moment": "^2.24.0",
-    "nuxt": "^2.3.4",
+    "nuxt": "^2.15.8",
     "nuxt-buefy": "^0.3.2",
     "print-js": "^1.0.63",
     "sweetalert": "^2.1.2",
